@@ -124,6 +124,10 @@ def save_clipped_meshes(pm_meshes, out_meshes, color_list, out_path):
 def save_topology(clipped_meshes, out_path):
     filtered_submeshes_pv = [pv.wrap(item) for item in clipped_meshes]
 
+    index = range(len(filtered_submeshes_pv))
+    index = list(
+        itertools.combinations(index, 2)
+    )
     filtered_submeshes_pv_combinations = list(
         itertools.combinations(filtered_submeshes_pv, 2)
     )
@@ -139,6 +143,7 @@ def save_topology(clipped_meshes, out_path):
         if intersection.n_points > 0:
             intersected_pair_indices.append(k)
             intersection_curve = {}
+            intersection_curve["index"] = index[k]
             intersection_curve["pv_points"] = intersection.points.tolist()
             intersection_curve["pv_lines"] = intersection.lines.reshape(-1, 3)[
                 :, 1:
@@ -148,10 +153,14 @@ def save_topology(clipped_meshes, out_path):
     intersections["curves"] = intersection_curves
 
     intersection_corners = []
+    index = range(len(intersection_curves))
+    index = list(
+        itertools.combinations(index, 2)
+    )
     intersection_curves_combinations_indices = list(
         itertools.combinations(range(len(intersection_curves)), 2)
     )
-    for combination_indices in intersection_curves_combinations_indices:
+    for k, combination_indices in enumerate(intersection_curves_combinations_indices):
         sample0 = np.array(intersection_curves[combination_indices[0]]["pv_points"])
         sample1 = np.array(intersection_curves[combination_indices[1]]["pv_points"])
 
@@ -160,12 +169,37 @@ def save_topology(clipped_meshes, out_path):
 
         if len(row_indices) > 0 and len(col_indices) > 0:
             corners = [
-                (sample0[item[0]] + sample1[item[1]]) / 2
+                {"corner": ((sample0[item[0]] + sample1[item[1]]) / 2).tolist(), "index":index[k]}
                 for item in zip(row_indices, col_indices)
             ]
             intersection_corners.extend(corners)
 
-    intersections["corners"] = [arr.tolist() for arr in intersection_corners]
-
+    intersections["corners"] = intersection_corners
     with open(out_path, "w") as cf:
         json.dump(intersections, cf)
+
+    num_surface = len(clipped_meshes)
+    num_curve = len(intersection_curves)
+    FE = [[] for item in range(num_surface)]
+    EV = [[] for item in range(num_curve)]
+
+    for idx, item in enumerate(intersection_curves):
+        FE[item["index"][0]].append(idx)
+        FE[item["index"][1]].append(idx)
+    for idx, item in enumerate(intersection_corners):
+        EV[item["index"][0]].append(idx)
+        EV[item["index"][1]].append(idx)
+
+    with open("{}.txt".format(out_path[:-5]), "w") as cf:
+        cf.write("FE\n")
+        for idx, item in enumerate(FE):
+            cf.write(str(idx))
+            for iitem in item:
+                cf.write(" {}".format(iitem))
+            cf.write("\n")
+        cf.write("EV\n")
+        for idx, item in enumerate(EV):
+            cf.write(str(idx))
+            for iitem in item:
+                cf.write(" {}".format(iitem))
+            cf.write("\n")

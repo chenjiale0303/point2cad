@@ -40,7 +40,10 @@ def process_singleprocessing(cfg, uniq_labels, points, labels, device):
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    color_list = make_colormap_optimal()
+    color_list = make_colormap_optimal(256)
+    with open("color.txt", "w") as f:
+        for i in range(len(color_list)):
+            f.write("{} {} {}\n".format(color_list[i][0],color_list[i][1],color_list[i][2]))
 
     parser = argparse.ArgumentParser(description="Point2CAD pipeline")
     parser.add_argument("--path_in", type=str, default="./assets/abc_00949.xyzc")

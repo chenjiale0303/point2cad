@@ -115,9 +115,9 @@ def process_one_surface(label, points, labels, cfg, device):
             "plane", in_points, recon_basic_shapes, device=device
         )
         pred_mesh.triangle_normals = o3d.utility.Vector3dVector([])
-        o3d.io.write_triangle_mesh("tmp.obj", pred_mesh)
-        pred_mesh = pv.read("tmp.obj")
-        os.remove("tmp.obj")
+        o3d.io.write_triangle_mesh("{}.obj".format(int(label)), pred_mesh)
+        pred_mesh = pv.read("{}.obj".format(int(label)))
+        os.remove("{}.obj".format(int(label)))
         pred_info["type"] = "plane"
         pred_info["params"] = recon_basic_shapes["plane_params"]
         pred_info["err"] = plane_err
@@ -127,9 +127,9 @@ def process_one_surface(label, points, labels, cfg, device):
             "sphere", in_points, recon_basic_shapes, device=device
         )
         pred_mesh.triangle_normals = o3d.utility.Vector3dVector([])
-        o3d.io.write_triangle_mesh("tmp.obj", pred_mesh)
-        pred_mesh = pv.read("tmp.obj")
-        os.remove("tmp.obj")
+        o3d.io.write_triangle_mesh("{}.obj".format(int(label)), pred_mesh)
+        pred_mesh = pv.read("{}.obj".format(int(label)))
+        os.remove("{}.obj".format(int(label)))
         pred_info["type"] = "sphere"
         pred_info["params"] = recon_basic_shapes["sphere_params"]
         pred_info["err"] = sphere_err
@@ -139,9 +139,9 @@ def process_one_surface(label, points, labels, cfg, device):
             "cylinder", in_points, recon_basic_shapes, device=device
         )
         pred_mesh.triangle_normals = o3d.utility.Vector3dVector([])
-        o3d.io.write_triangle_mesh("tmp.obj", pred_mesh)
-        pred_mesh = pv.read("tmp.obj")
-        os.remove("tmp.obj")
+        o3d.io.write_triangle_mesh("{}.obj".format(int(label)), pred_mesh)
+        pred_mesh = pv.read("{}.obj".format(int(label)))
+        os.remove("{}.obj".format(int(label)))
         pred_info["type"] = "cylinder"
         pred_info["params"] = recon_basic_shapes["cylinder_params"]
         pred_info["err"] = cylinder_err
@@ -152,9 +152,9 @@ def process_one_surface(label, points, labels, cfg, device):
                 "cone", in_points, recon_basic_shapes, device=device
             )
             pred_mesh.triangle_normals = o3d.utility.Vector3dVector([])
-            o3d.io.write_triangle_mesh("tmp.obj", pred_mesh)
-            pred_mesh = pv.read("tmp.obj")
-            os.remove("tmp.obj")
+            o3d.io.write_triangle_mesh("{}.obj".format(int(label)), pred_mesh)
+            pred_mesh = pv.read("{}.obj".format(int(label)))
+            os.remove("{}.obj".format(int(label)))
             pred_info["type"] = "cone"
             pred_info["params"] = recon_basic_shapes["cone_params"]
             pred_info["err"] = cone_err
@@ -164,9 +164,9 @@ def process_one_surface(label, points, labels, cfg, device):
                 "plane", in_points, recon_basic_shapes, device=device
             )
             pred_mesh.triangle_normals = o3d.utility.Vector3dVector([])
-            o3d.io.write_triangle_mesh("tmp.obj", pred_mesh)
-            pred_mesh = pv.read("tmp.obj")
-            os.remove("tmp.obj")
+            o3d.io.write_triangle_mesh("{}.obj".format(int(label)), pred_mesh)
+            pred_mesh = pv.read("{}.obj".format(int(label)))
+            os.remove("{}.obj".format(int(label)))
             pred_info["type"] = "plane"
             pred_info["params"] = recon_basic_shapes["plane_params"]
             pred_info["err"] = plane_err
