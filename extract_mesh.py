@@ -5,6 +5,8 @@ import argparse
 import numpy as np
 import open3d as o3d
 import trimesh
+import math
+import plyfile
 
 from point2cad.utils import rotation_matrix_a_to_b
 
@@ -79,8 +81,6 @@ def transform_mesh(root, point_dir):
             for i in range(num_curves):
                 pv_points = np.asarray(curves["curves"][i]["pv_points"]).astype(np.float32)
                 pv_points = ((R.T @ (pv_points * (np.max(std) + EPS)).T).T + mean_points)
-                # pv_points = (pv_points - center_points) / diag * 2 * 0.8 # HPNet only
-                # pv_points = (pv_points - center_points) / diag * 2 # HPNet real scene only
                 new_json["curves"].append({"pv_points": pv_points.tolist()})
                 pv_lines = np.asarray(curves["curves"][i]["pv_lines"]).astype(np.int32)
                 new_json["curves"][-1]["pv_lines"] = curves["curves"][i]["pv_lines"]
@@ -113,8 +113,6 @@ def transform_mesh(root, point_dir):
                     num_unique_corners += 1
 
                 corner = ((R.T @ (corner * (np.max(std) + EPS)).T).T + mean_points)
-                # corner = (corner - center_points) / diag * 2 * 0.8 # HPNet only
-                # corner = (corner - center_points) / diag * 2 # HPNet real scene only
                 corners.append(corner)
                 if not is_duplicate:
                     remove_duplicated_corners.append(corner)
@@ -175,6 +173,14 @@ def transform_mesh(root, point_dir):
     pass
 
 
+def check_done(prefix):
+    try:
+        with open(os.path.join(output_dir, prefix, prefix + ".txt"), "r") as f:
+            content = f.read()
+            return "Done" in content
+    except:
+        return False
+
 if __name__ == "__main__":
     if root != "./assets":
         tasks = [item[:8] for item in os.listdir(root) if item.endswith(".xyzc")]
@@ -186,6 +192,26 @@ if __name__ == "__main__":
 
     os.makedirs(output_dir, exist_ok=True)
     for prefix in tqdm(tasks):
+        if check_done(prefix):
+            continue
+        os.makedirs(os.path.join(output_dir, prefix), exist_ok=True)
+        out = open(os.path.join(output_dir, prefix, "{}.txt".format(prefix)), "w")
+        process = subprocess.Popen([
+            exe,
+            "-m",
+            "point2cad.main",
+            "--max_parallel_surfaces", "4",
+            "--path_in", os.path.join(root, "{}.xyzc".format(prefix)),
+            "--path_out", os.path.join(output_dir, prefix),
+        ], stdout=out, stderr=out)
+        process.wait()
+        out.close()
+
+
+    # fix CUDA out of memory
+    for prefix in tqdm(tasks):
+        if check_done(prefix):
+            continue
         os.makedirs(os.path.join(output_dir, prefix), exist_ok=True)
         out = open(os.path.join(output_dir, prefix, "{}.txt".format(prefix)), "w")
         process = subprocess.Popen([
@@ -198,6 +224,7 @@ if __name__ == "__main__":
         ], stdout=out, stderr=out)
         process.wait()
         out.close()
+
 
     transform_mesh(args.output_dir, args.root)
     
