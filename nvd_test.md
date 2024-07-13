@@ -4,7 +4,11 @@
 
 To obtain data for evaluation of **HPNet+Point2CAD**, you should follow these steps:
 
-1.  Input your test data into **HPNet** to generate xyzc files. Specially, write the model ids you want to generate in the file named `test_ids.txt`, with each model's id on a new line.
+1.  Input your test data into **HPNet** to generate xyzc files. Specially, write the model ids you want to generate in the file named `test_ids.txt`, with each model's id on a new line. Run the following command: 
+```
+cd /root/code/HPNet && \
+python test.py --data_path /data/test_data_whole3/poisson --eval --checkpoint_path abc_normal.tar 
+```
 2.  Run `python test.py` to generate the `out` directory containing `.xyzc` files.
 3.  Use the generated xyzc files as input for **Point2CAD** to obtain the corresponding mesh. Run `python extract_mesh.py --output OUTPUT_PATH`.
 4.  Sample points based on area on the transformed mesh, resulting in `mesh_transformed_sampled.ply`. Specially, complie c++ `prepare_data_for_point2CAD_evaluate` code, and run 
@@ -24,7 +28,11 @@ cd build &
 
 Similar to HPNet(The instructions running are the same), to obtain data for evaluation of **SEDNet+Point2CAD**, you should follow these steps:
 
-1.  Input your test data into **SEDNet** to generate xyzc files.
+1.  Input your test data into **SEDNet** to generate xyzc files. Run the following command: 
+```
+cd /root/code/SED-Net && \
+python test.py configs/config_SEDNet_normal.yml Save no_multi_vote no_fold5drop  /data/test_data_whole3/poisson out
+```
 2.  Run `python test.py` to generate the `out` directory containing `.xyzc` files.
 3.  Use the generated xyzc files as input for **Point2CAD** to obtain the corresponding mesh. Run `python extract_mesh.py --output OUTPUT_PATH`.
 4.  Sample points based on area on the transformed mesh, resulting in `mesh_transformed_sampled.ply`. Specially, complie c++ `prepare_data_for_point2CAD_evaluate` code, and run 
