@@ -192,11 +192,13 @@ if __name__ == "__main__":
 
     status = []
     os.makedirs(output_dir, exist_ok=True)
-    
+   
+    tasks.sort()
+    # tasks = tasks[:100]
     processes = [None] * num_gpus
     outs = [None] * num_gpus
     
-    for idx, prefix in (tqdm(tasks)):
+    for idx, prefix in enumerate(tqdm(tasks)):
         if check_done(prefix):
             continue
         
