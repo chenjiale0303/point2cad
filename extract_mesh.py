@@ -5,7 +5,7 @@ import argparse
 import numpy as np
 import open3d as o3d
 import trimesh
-import math
+import math, time
 import plyfile
 
 from point2cad.utils import rotation_matrix_a_to_b
@@ -16,11 +16,14 @@ argparser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(description="Point2CAD extract mesh")
 parser.add_argument("--root", type=str, default="./assets", help="Network prediction root")
 parser.add_argument("--output_dir", type=str, default="./out", help="Mesh output dir")
+parser.add_argument("--num_gpus", type=int, default=1, help="Number of GPUs")
 args = parser.parse_args()
 
 exe = "python"
 root = args.root
 output_dir = args.output_dir
+num_gpus = args.num_gpus
+assert num_gpus >= 1
 
 EPS = np.finfo(np.float32).eps
 
@@ -188,24 +191,43 @@ if __name__ == "__main__":
         tasks = [item[:9] for item in os.listdir(root) if item.endswith(".xyzc")]
 
     status = []
-    outs = []
-
     os.makedirs(output_dir, exist_ok=True)
-    for prefix in tqdm(tasks):
+    
+    processes = [None] * num_gpus
+    outs = [None] * num_gpus
+    
+    for idx, prefix in (tqdm(tasks)):
         if check_done(prefix):
             continue
+        
+        while True:
+            i_gpu = -1
+            for i in range(num_gpus):
+                if processes[i] is None or processes[i] is not None and processes[i].poll() is not None:
+                    i_gpu = i
+                    processes[i] = None
+                    if outs[i] is not None:
+                        outs[i].close()
+                        outs[i] = None
+                    break
+            if i_gpu == -1:
+                time.sleep(3)
+            else:
+                break
+        
         os.makedirs(os.path.join(output_dir, prefix), exist_ok=True)
         out = open(os.path.join(output_dir, prefix, "{}.txt".format(prefix)), "w")
-        process = subprocess.Popen([
+        env = os.environ.copy()
+        env["CUDA_VISIBLE_DEVICES"] = str(i_gpu)
+        processes[i] = subprocess.Popen([
             exe,
             "-m",
             "point2cad.main",
             "--max_parallel_surfaces", "4",
             "--path_in", os.path.join(root, "{}.xyzc".format(prefix)),
             "--path_out", os.path.join(output_dir, prefix),
-        ], stdout=out, stderr=out)
-        process.wait()
-        out.close()
+        ], stdout=out, stderr=out, env=env)
+        outs[i] = out
 
 
     # fix CUDA out of memory
